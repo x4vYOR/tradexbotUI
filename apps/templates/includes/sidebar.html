@@ -37,6 +37,30 @@
         <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
           <!-- Add icons to the links using the .nav-icon class
                with font-awesome or any other icon font library -->
+          <li class="nav-item">
+            <a href="/strategy" class="nav-link {% if 'strategy' in segment %} active {% endif %}">
+              <i class="nav-icon fas fa-lightbulb"></i>
+              <p>
+                Strategies
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/training" class="nav-link {% if 'training' in segment %} active {% endif %}">
+              <i class="nav-icon fas fa-dumbbell"></i>
+              <p>
+                Training
+              </p>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="/trading" class="nav-link {% if 'trading' in segment %} active {% endif %}">
+              <i class="nav-icon fas fa-wallet"></i>
+              <p>
+                Trading
+              </p>
+            </a>
+          </li>
           <li class="nav-item has-treeview {% if 'index' in segment %} menu-open {% endif %}">
             <a href="#" class="nav-link {% if 'index' in segment %} active {% endif %}">
               <i class="nav-icon fas fa-tachometer-alt"></i>

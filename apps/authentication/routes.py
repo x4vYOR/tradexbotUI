@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .schemas import CreateAccountFormRequest, CreateAccountFormResponse
-from .models import Users
+from .models import User
 from .password import verify_pass, hash_pass
 from .crud import get_user, get_email
 from .token import ACCESS_TOKEN_EXPIRE_MINUTES, create_access_token
@@ -76,7 +76,7 @@ async def create_user(
         )
 
     # Else we can create the user
-    user = Users(
+    user = User(
         username=username.lower(),
         email=email.lower(),
         password=hash_pass(password),
@@ -118,7 +118,7 @@ async def login(
     password = form_data.password
 
     # Locate user
-    user = db.query(Users).filter(Users.username == username).first()
+    user = db.query(User).filter(User.username == username).first()
 
     # Check the password
     if user and verify_pass(password, user.password):

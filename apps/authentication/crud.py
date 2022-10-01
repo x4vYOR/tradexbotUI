@@ -5,7 +5,7 @@
 from ..database import get_db
 from .token import SECRET_KEY, ALGORITHM, oauth2_scheme
 from .schemas import TokenData
-from .models import Users
+from .models import User
 
 from fastapi import Depends, HTTPException, status
 from jose import jwt, JWTError
@@ -13,11 +13,11 @@ from sqlalchemy.orm import Session
 
 
 def get_user(db: Session, username: str):
-    return db.query(Users).filter(Users.username == username).first()
+    return db.query(User).filter(User.username == username).first()
 
 
 def get_email(db: Session, email: str):
-    return db.query(Users).filter(Users.email == email).first()
+    return db.query(User).filter(User.email == email).first()
 
 
 async def get_current_user(

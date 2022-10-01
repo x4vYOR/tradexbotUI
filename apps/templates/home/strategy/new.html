@@ -1,0 +1,162 @@
+{% extends "layouts/base.html" %}
+{% from 'components/tabs.html' import tabs %}
+{% from 'components/tab-pane.html' import tab_pane %}
+{% from 'components/nav-item.html' import nav_item %}
+{% from 'components/select.html' import select %}
+{% from 'components/button.html' import button %}
+{% from 'components/simple-table.html' import simple_table %}
+
+{% block title %} Strategy {% endblock %}
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+<link rel="stylesheet" href="/static/assets/plugins/bootstrap4-duallistbox/bootstrap-duallistbox.min.css">
+{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>New strategy</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            {# Variables definition #}
+                {% set nav_items %}
+                    {{ nav_item("pairs", "Pairs", active=True) }}
+                    {{ nav_item("rules", "Rules", False) }}
+                    {{ nav_item("trade", "Trade Setup", False) }}
+                {% endset %}
+
+                {% set buyruledata = [ {"N": "1",
+                                "Indicator": select(indicators, "buy_indicator_1", "buy_indicator_1"),
+                                "Condition": select(conditions, "buy_condition_1", "buy_condition_1"),
+                                "Value": select(indicators, "buy_value_1", "buy_value_1"),
+                                "Option": button("","", "minus",dataid="1", class="danger w-60 m-auto btn_eliminar")
+                            } ] 
+                %}
+                {% set sellruledata = [ {"N": "1",
+                                "Indicator": select(indicators, "sell_indicator_1", "sell_indicator_1"),
+                                "Condition": select(conditions, "sell_condition_1", "sell_condition_1"),
+                                "Value": select(indicators, "sell_value_1", "sell_value_1"),
+                                "Option": button("","", "minus",dataid="1", class="danger w-60 m-auto btn_eliminar")
+                            } ] 
+                %}
+            {# End variables definition #}
+            <!-- set Rules tab content -->
+            {% set content_rules %}
+                <div class="row justify-content-middle">
+                    <div class="col-md-6">
+                        <div class="row justify-content-end mb-4">
+                            <div class="col-auto">
+                                {{ button("Add", "buy_add", icon="plus") }}
+                            </div>
+                        </div>
+                        {% call(row,head) simple_table(["N","Indicator","Condition","Value","Option"], buyruledata, "Buy Strategy indicator rules" , "table_buy_rules") %}
+                        <tr>
+                            {% for item in head %}
+                            <td class="p-auto">
+                                {{ row[item] }}
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endcall %}
+                    </div>
+                    <div class="col-md-6">
+                        <div class="row justify-content-end mb-4">
+                            <div class="col-auto">
+                                {{ button("Add", "sell_add", icon="plus") }}
+                            </div>
+                        </div>
+                        {% call(row,head) simple_table(["N","Indicator","Condition","Value","Option"], sellruledata, "Sell Strategy indicator rules" , "table_sell_rules") %}
+                        <tr>
+                            {% for item in head %}
+                                <td class="p-auto">
+                                    {{ row[item] }}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                        {% endcall %}
+                    </div>
+                </div>
+            {% endset %}
+            <!-- set Pairs tab content -->
+            {% set content_pairs %}
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="card card-default">
+                            <div class="card-header">
+                              <h3 class="card-title">Select pairs</h3>
+                  
+                              <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                  <i class="fas fa-minus"></i>
+                                </button>
+                                <button type="button" class="btn btn-tool" data-card-widget="remove">
+                                  <i class="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </div>
+                            <!-- /.card-header -->
+                            <div class="card-body">
+                              <div class="row">
+                                <div class="col-12">
+                                  <div class="form-group">
+                                    <label>Pairs</label>
+                                    <select class="duallistbox" multiple="multiple" id="pairs" name="pairs[]">
+                                        {% for item in pairs %}
+                                            {% if loop.first %}
+                                                <option selected  value="{{item.id}}">{{item.name}}</option>
+                                            {% else %}
+                                                <option  value="{{item.id}}">{{item.name}}</option>                                                
+                                            {% endif %}
+                                        {% endfor %}
+                                    </select>
+                                  </div>
+                                  <!-- /.form-group -->
+                                </div>
+                                <!-- /.col -->
+                              </div>
+                              <!-- /.row -->
+                            </div>
+                            <!-- /.card-body -->
+                          </div>
+                    </div>
+                </div>
+            {% endset %}
+            
+            <!-- Ensamble tab-panes -->
+            {% set tab_panes %}
+                {{ tab_pane(content_pairs, "pairs", active=True) }}
+                {{ tab_pane(content_rules, "rules") }}
+            {% endset %}
+            {{ tabs(nav_items,tab_panes) }}
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+<script src="/static/assets/plugins/bootstrap4-duallistbox/jquery.bootstrap-duallistbox.min.js"></script>
+<script>
+    $(function () {
+        //Bootstrap Duallistbox
+        $('.duallistbox').bootstrapDualListbox()
+    })
+</script>
+{% endblock javascripts %}
