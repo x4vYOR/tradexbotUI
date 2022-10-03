@@ -2,10 +2,11 @@
 
 # models.py
 
+from symbol import parameters
 from ..database import Base
 from datetime import datetime
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, DateTime, FetchedValue, Boolean, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, DateTime, FetchedValue, Boolean, ForeignKey, Float, Date
 
 class Algorithm(Base):
 
@@ -24,14 +25,31 @@ class Algorithm(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
+class AlgorithmDetail(Base):
+
+    __tablename__ = "algorithm_detail"
+    #normal columns
+    id = Column(Integer, primary_key=True)
+    training_detail_id = Column(Integer)
+    algorithm_id = Column(Integer)
+    name = Column(String(200))
+    parameters = Column(String(3000))
+    active = Column(Boolean, default=True)
+
+    # Relation with childrens Has many
+    # Relation with parents Has one
+    training_detail = relationship("TrainingDetail", back_populates="algorithm_details")
+    algorithm = relationship("Algorithm", back_populates="algorithm_details")
+
+    created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
+    updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 class Backtest(Base):
 
     __tablename__ = "backtest"
     #normal columns
     id = Column(Integer, primary_key=True)
-    training_detail_id = Column(Integer, ForeignKey("training_detail.id"))
-    strategy_id = Column(Integer, ForeignKey("strategy.id"))
-    train_setup_id = Column(Integer, ForeignKey("train_setup.id"))
+    #strategy_id = Column(Integer, ForeignKey("strategy.id"))
+    train_id = Column(Integer, ForeignKey("train.id"))
 
     active = Column(Boolean, default=True)
 
@@ -39,9 +57,9 @@ class Backtest(Base):
     backtest_charts = relationship("BacktestChart", back_populates="backtest")
     backtest_metrics = relationship("BacktestMetric", back_populates="backtest")
     # Relation with parents Has one
-    training_detail = relationship("TrainingDetail", back_populates="backtests")
-    strategy = relationship("Strategy", back_populates="backtests")
-    train_setup = relationship("TrainSetup", back_populates="backtests")
+    #training_detail = relationship("TrainingDetail", back_populates="backtests")
+    #strategy = relationship("Strategy", back_populates="backtests")
+    train = relationship("Train", back_populates="backtests")
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
@@ -71,12 +89,12 @@ class BacktestMetric(Base):
     value = Column(Float)
     description = Column(String(200))
     backtest_id = Column(Integer, ForeignKey("backtest.id"))
-    metric_id = Column(Integer, ForeignKey("metric.id"))
+    portfolio_metric_id = Column(Integer, ForeignKey("portfolio_metric.id"))
     # Relation with childrens Has many
 
     # Relation with parents Has one
     backtest = relationship("Backtest", back_populates="backtest_metrics")
-    metric = relationship("Metric", back_populates="backtest_metrics")
+    portfolio_metric = relationship("PortfolioMetric", back_populates="backtest_metrics")
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
@@ -87,6 +105,7 @@ class BuyStrategy(Base):
     #normal columns
     id = Column(Integer, primary_key=True)
     name = Column(String(200))
+    parameters = Column(String(3000))
     description = Column(String(1000))
     active = Column(Boolean, default=True)
     
@@ -130,21 +149,6 @@ class Indicator(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Metric(Base):
-
-    __tablename__ = "metric"
-    #normal columns
-    id = Column(Integer, primary_key=True)
-    name = Column(String(200))
-    active = Column(Boolean, default=True)
-
-    # Relation with childrens Has many
-    backtest_metrics = relationship("BacktestMetric", back_populates="metric")
-    # Relation with parents Has one
-
-    created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
-    updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
-
 class ModelMetric(Base):
 
     __tablename__ = "model_metric"
@@ -170,6 +174,7 @@ class PortfolioMetric(Base):
 
     # Relation with childrens Has many
     strategy_metrics = relationship("StrategyMetric", back_populates="portfolio_metric")
+    backtest_metrics = relationship("BacktestMetric", back_populates="portfolio_metric")
     # Relation with parents Has one
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
@@ -235,7 +240,7 @@ class Strategy(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(200))
     description = Column(String(1000))
-    timeframe = Column(String(10))
+    strategy_parameters = Column(String(3000))
     buy_strategy_id = Column(Integer, ForeignKey("buy_strategy.id"))
     user_id = Column(Integer, ForeignKey("user.id"))
     active = Column(Boolean, default=True)
@@ -243,7 +248,7 @@ class Strategy(Base):
     # Relation with childrens Has many
     rules = relationship("Rule", back_populates="strategy")
     strategy_pairs = relationship("StrategyPair", back_populates="strategy")
-    backtests = relationship("Backtest", back_populates="strategy")
+    training_settings = relationship("TrainSetup", back_populates="strategy")
     trades = relationship("Trade", back_populates="strategy")
     strategy_metrics = relationship("StrategyMetric", back_populates="strategy")
     # Relation with parents Has one
@@ -316,8 +321,13 @@ class TradingSetup(Base):
     name = Column(String(200))
     description = Column(String(1000))
     active = Column(Boolean, default=True)
-    portfolio = Column(String(2000))
     exchange = Column(String(2000))
+    exchange_comission = Column(Float(precision=4))
+    capital = Column(Float(precision=8))
+    currency_base = Column(String(10))
+    currency_symbol = Column(String(5))
+    api_key = Column(String(100))
+    api_secret = Column(String(100))
         
     user_id = Column(Integer, ForeignKey("user.id"))
 
@@ -335,12 +345,14 @@ class Train(Base):
     #normal columns
     id = Column(Integer, primary_key=True)
     train_setup_id = Column(Integer, ForeignKey("train_setup.id"))
-    start = Column(DateTime)
-    end = Column(DateTime)
+    scaler = Column(String(200))
+    model = Column(String(200))
+    algorithm_parameters = Column(String(3000))    
+    strategy_parameters = Column(String(3000))    
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
-    training_details = relationship("TrainingDetail", back_populates="train")
+    backtests = relationship("Backtest", back_populates="train")
     # Relation with parents Has one
     train_setup = relationship("TrainSetup", back_populates="trainings")
 
@@ -352,19 +364,19 @@ class TrainingDetail(Base):
     __tablename__ = "training_detail"
     #normal columns
     id = Column(Integer, primary_key=True)
-    train_id = Column(Integer, ForeignKey("train.id"))
-    algorithm_id = Column(Integer, ForeignKey("algorithm.id"))
     name = Column(String(200))
-    scaler = Column(String(200))
-    model = Column(String(200))
+    description = Column(String(1000))
+    user_id = Column(Integer, ForeignKey("user.id"))
+    #scaler = Column(String(200))
+    #model = Column(String(200))
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
-    backtests = relationship("Backtest", back_populates="training_detail")
+    train_settings = relationship("TrainSetup", back_populates="training_detail")
+    algorithm_details = relationship("AlgorithmDetail", back_populates="training_detail")
     training_metrics = relationship("TrainingMetric", back_populates="training_detail")
     # Relation with parents Has one
-    train = relationship("Train", back_populates="training_details")
-    algorithm = relationship("Algorithm", back_populates="training_details")
+    user = relationship("User", back_populates="strategies")
 
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
@@ -394,17 +406,24 @@ class TrainSetup(Base):
     name = Column(String(200))
     description = Column(String(1000))
     active = Column(Boolean, default=True)
-    backtest = Column(String(2000))
-    models = Column(String(2000))
-    data = Column(String(2000))
-    target = Column(String(2000))
+    timeframe = Column(String(10))
+    train_data_start = Column(Date)
+    train_data_end = Column(Date)
+    backtest_data_start = Column(Date)
+    backtest_data_end = Column(Date)
+
     user_id = Column(Integer, ForeignKey("user.id"))
+    trading_setup_id = Column(Integer, ForeignKey("trading_setup.id"))
+    training_detail_id = Column(Integer, ForeignKey("training_detail.id"))
+    strategy_id = Column(Integer, ForeignKey("strategy.id"))
 
     # Relation with childrens Has many
     trainings = relationship("Train", back_populates="train_setup")
-    backtests = relationship("Backtest", back_populates="train_setup")
     # Relation with parents Has one
     user = relationship("User", back_populates="training_settings")
+    trading_setup = relationship("TradingSetup", back_populates="training_settings")
+    training_detail = relationship("TrainingDetail", back_populates="training_settings")
+    strategy = relationship("Strategy", back_populates="training_settings")
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
@@ -418,6 +437,7 @@ class User(Base):
     email = Column(String(128), unique=True)
     password = Column(String(64))
     strategies = relationship("Strategy", back_populates="user")
+    training_details = relationship("TrainingDetail", back_populates="user")
     training_settings = relationship("TrainSetup", back_populates="user")
     trading_settings = relationship("TradingSetup", back_populates="user")
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())

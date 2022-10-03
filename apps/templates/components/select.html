@@ -1,7 +1,7 @@
-{% macro select(options, id, name, label="", class="", default=True) %}
+{% macro select(options, id, name, label="", class="", default=True,required=False) %}
     <div class="form-group">
         <label>{{label}}</label>
-        <select class="custom-select {{class}}" id="{{id}}" name="{{name}}">
+        <select class="custom-select {{class}}" id="{{id}}" name="{{name}}" {% if required %} required {% endif%}>
             {% for item in options %}
                 {% if default and loop.first %}
                     <option selected value="">Select one</option>

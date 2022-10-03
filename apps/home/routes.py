@@ -2,7 +2,8 @@
 
 # home/routes.py
 
-from ..authentication.models import User, Indicator, Condition, Pair
+from sunau import AUDIO_UNKNOWN_SIZE
+from ..authentication.models import PortfolioMetric, User, Indicator, Condition, Pair, BuyStrategy, ModelMetric, Algorithm
 from ..authentication.crud import get_current_user
 
 from fastapi import APIRouter, Depends
@@ -11,6 +12,7 @@ from fastapi.responses import HTMLResponse
 from fastapi.requests import Request
 from ..database import get_db
 from sqlalchemy.orm import Session
+import ast
 
 router = APIRouter()
 
@@ -38,9 +40,36 @@ async def new_strategy(request: Request, user: User = Depends(get_current_user),
     indicators = db.query(Indicator).order_by(Indicator.name).all()
     conditions = db.query(Condition).order_by(Condition.name).all()
     pairs = db.query(Pair).order_by(Pair.name).all()
+    metrics = db.query(PortfolioMetric).order_by(PortfolioMetric.name).all()
+    buy_strategies = db.query(BuyStrategy).order_by(BuyStrategy.name).all()
+    aux_buy_strategies = []
+    for item in buy_strategies:
+        aux_buy_strategies.append({"id":item.id, "name": item.name+" - "+item.description})
+    buy_strategies = aux_buy_strategies
     return templates.TemplateResponse(
         "home/strategy/new.html",
-        {"request": request, "current_user": user, "segment": "strategy", "indicators": indicators, "conditions": conditions, "pairs": pairs},
+        {"request": request, "current_user": user, "segment": "strategy", "indicators": indicators, "conditions": conditions, "pairs": pairs, "metrics": metrics, "buy_strategies":buy_strategies},
+    )
+
+@router.get("/trainer", response_class=HTMLResponse)
+async def trainer(request: Request, user: User = Depends(get_current_user)):
+
+    return templates.TemplateResponse(
+        "home/trainer/index.html",
+        {"request": request, "current_user": user, "segment": "trainer"},
+    )
+
+@router.get("/trainer/new", response_class=HTMLResponse)
+async def new_trainer(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    model_metrics = db.query(ModelMetric).order_by(ModelMetric.name).all()
+    algorithms = db.query(Algorithm).order_by(Algorithm.name).all()
+    aux_algorithms = []
+    for item in algorithms:
+        aux_algorithms.append({"id":item.id, "name": item.name, "parameters": ast.literal_eval(item.parameters)})
+    algorithms = aux_algorithms
+    return templates.TemplateResponse(
+        "home/trainer/new.html",
+        {"request": request, "current_user": user, "segment": "trainer", "model_metrics": model_metrics, "algorithms": algorithms},
     )
 
 @router.get("/{template}", response_class=HTMLResponse)

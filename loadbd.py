@@ -30,7 +30,11 @@ def insertPortfolioMetrics():
             {"name": "Abs Drawdown"},
             {"name": "Max Drawdown"},
             {"name": "Rel Drawdown"},
-            {"name": "Profit/Loss"}
+            {"name": "Profit/Loss"},
+            {"name": "% Profit"},
+            {"name": "Losses"},
+            {"name": "Wins"},
+            {"name": "Trade Duration"}
             ]
     metrics = [models.PortfolioMetric(
         name = item["name"]
@@ -40,14 +44,15 @@ def insertPortfolioMetrics():
     db.commit()
 
 def buyStrategies():
-    data = [{"name": "DCA", "description": "Dolar Cost Average. Periodic buys with same amount. Accumulative strategy"},
-            {"name": "Incremental DCA", "description": "Dolar Cost Average. Periodic buys with incremental amounts. Accumulative strategy"},
-            {"name": "Incremental Buys", "description": "Purchase with incremental amounts in every buy signal until reach a fixed profit for all stacked quantity. SemiAccumulative"},
-            {"name": "Scalping", "description": "Buy with a fixed amount. When profit or stoploss is reached sell inmediatly"},
-            {"name": "Normal Trading", "description": "Trade with a fixed amount based on buy and sell indicators signal. Can set stoploss"}
+    data = [{"name": "DCA", "parameters": '{ "profit": 0.015 }', "description": "Dolar Cost Average. Periodic buys with same amount. Accumulative strategy"},
+            {"name": "Incremental DCA", "parameters": '{ "profit": 0.015 }', "description": "Dolar Cost Average. Periodic buys with incremental amounts. Accumulative strategy"},
+            {"name": "Incremental Buys", "parameters": '{ "profit": 0.015 }', "description": "Purchase with incremental amounts in every buy signal until reach a fixed profit for all stacked quantity. SemiAccumulative"},
+            {"name": "Scalping", "parameters": '{ "profit": 0.015 }', "description": "Buy with a fixed amount. When profit or stoploss is reached sell inmediatly"},
+            {"name": "Normal Trading", "parameters": '{ "profit": 0.015 }', "description": "Trade with a fixed amount based on buy and sell indicators signal. Can set stoploss"}
             ]
     buyStrategies = [models.BuyStrategy(
         name = item["name"],
+        parameters = item["parameters"],
         description = item["description"]
     ) for item in data]
     # Add user to database
@@ -126,12 +131,47 @@ def insertIndicators():
     db.add_all(indicators)
     db.commit()
 
+def insertAlgorithm():
+    data = [{"name": "RandomForest","parameters":'{"n_stimators": [800,1000], "min_samples_split": [4],"cv": [5],"random_state": [0]}',"type":"ML"},
+            {"name": "XGBoost","parameters":'{"learning_rate": [0.1],"objective": ["binary:logistic"],"cv": 5,"n_estimators": [1000,1200],"random_state": [0]}',"type":"ML"},
+            {"name": "SVM","parameters":'{"kernel": ["rbf","linear"],"cv": 5,"random_state": [0]}',"type":"ML"},
+            {"name": "KNN","parameters":'{"metric": ["euclidean","minkowski"],"cv": 5,"n_neighbors": [5,7]}',"type":"ML"}]
+    condition = [models.Algorithm(
+        name = item["name"],
+        parameters = item["parameters"],
+        type = item["type"]
+    ) for item in data]
+    # Add user to database
+    db.add_all(condition)
+    db.commit()
+
+def insertModelMetric():
+    data = [{"name": "F1-score"},
+            {"name": "ROC"},
+            {"name": "Specificity"},
+            {"name": "Accuracy"},
+            {"name": "Recall"},
+            {"name": "Precision"},
+            {"name": "TP"},
+            {"name": "TN"},
+            {"name": "FP"},
+            {"name": "FN"}
+            ]
+    condition = [models.ModelMetric(
+        name = item["name"]
+    ) for item in data]
+    # Add user to database
+    db.add_all(condition)
+    db.commit()
+
+
 insertConditions()
 insertIndicators()
 insertPairs()
 insertPortfolioMetrics()
 buyStrategies()
-
+insertAlgorithm()
+insertModelMetric()
 
 
 

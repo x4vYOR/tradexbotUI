@@ -1,0 +1,61 @@
+{% extends "layouts/base.html" %}
+{% import 'components/simple-table.html' as x_table %}
+{% from 'components/button.html' import button %}
+
+{% block title %} Strategy {% endblock %}
+
+<!-- Element injected in the BODY element -->
+{% block body_class %} {% endblock body_class %}
+
+<!-- Specific Page CSS goes HERE  -->
+{% block stylesheets %}
+
+{% endblock stylesheets %}
+
+{% block content %}
+
+<!-- Content Wrapper. Contains page content -->
+<div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1>Trainer creator</h1>
+                </div>
+            </div>
+        </div><!-- /.container-fluid -->
+    </section>
+    {% set header = ["name","apellidos", "edad"] %}
+    {% set data = [{"name": "Javier Alex", "apellidos": "jimenez mendoza", "edad":28},{"name": "Javier Alex",
+    "apellidos": "jimenez mendoza", "edad":28}, {"name": "Javier Alex", "apellidos": "jimenez mendoza", "edad":28}] %}
+    <!-- Main content -->
+    <section class="content">
+        <div class="container-fluid">
+            <div class="row justify-content-end mb-4">
+                <div class="col-auto">
+                    {{ button("Nuevo", "btn_nuevo",uri="/trainer/new") }}
+                </div>
+            </div>
+            {% call(row,head) x_table.simple_table(header, data, "Tabla de estudiantes" , "basic-datatable") %}
+            <tr>
+                {% for item in head %}
+                <td>
+                    {{ row[item] }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endcall %}
+        </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+</div>
+
+{% endblock content %}
+
+<!-- Specific Page JS goes HERE  -->
+{% block javascripts %}
+
+<script src="/static/assets/js/strategy.js"></script>
+
+{% endblock javascripts %}
