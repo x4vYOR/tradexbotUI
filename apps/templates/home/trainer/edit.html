@@ -30,7 +30,7 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>New Training Setup</h1>
+                    <h1>Edit Training Setup</h1>
                 </div>
             </div>
         </div><!-- /.container-fluid -->
@@ -39,12 +39,16 @@
     <section class="content">
         <div class="container-fluid">
             {# Variables definition #}
-            <form action="/trainer/new" method="post">
+            <form action="/trainer/edit" method="post">
                 {% set card_body_model_metrics %}
                     <div class="row">
                         <div class="col-12">
                             {% for item in model_metrics %}
-                                {{checkbox(item.name,"model_metrics[]",item.id,item.name)}}
+                                {% if item.id in training_metrics %}
+                                    {{checkbox(item.name,"model_metrics[]",item.id,item.name, checked=True)}}                            
+                                {% else %}
+                                    {{checkbox(item.name,"model_metrics[]",item.id,item.name)}}                          
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -58,7 +62,11 @@
                           </div>
                         <div class="col-12">
                             {% for item in algorithms %}
-                                {{checkbox_inputs(item.name,"algorithms[]",item.id,item.name,item.parameters)}}
+                                {% if item.id in training_algorithms %}
+                                    {{checkbox_inputs(item.name,"algorithms[]",item.id,item.name,training_algorithms_parameters[item.id],checked=True)}}
+                                {% else %}
+                                    {{checkbox_inputs(item.name,"algorithms[]",item.id,item.name,item.parameters)}}
+                                {% endif %}
                             {% endfor %}
                         </div>
                     </div>
@@ -66,14 +74,15 @@
                 {% set card_body_split_data %}
                     <div class="row">
                         <div class="col-12">
-                            {{slider("split_data","split_data","Test data %")}}
+                            {{slider("split_data","split_data","Test data %",value=training_detail.data_split)}}
                         </div>
                     </div>
                 {% endset %}
                 {% set card_body_info %}
-                    {{ input("name","name",label="Set a name",placeholder="Training name", required=True) }}
-                    {{ textarea("description","description",label="Description",placeholder="Training description") }}
+                    {{ input("name","name",label="Set a name",placeholder="Training name", required=True, value=training_detail.name) }}
+                    {{ textarea("description","description",label="Description",placeholder="Training description", value=training_detail.description) }}
                 {% endset %}
+                <input type="hidden" name="training_detail_id" value="{{training_detail.id}}">
                 <div class="row justify-content-end mb-4">
                     <div class="col-auto">
                         <button type="submit" class="btn btn-lg btn-primary"><i class="fa fas fa-save mr-2"></i>Save</button>

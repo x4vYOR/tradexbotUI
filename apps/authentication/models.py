@@ -2,6 +2,7 @@
 
 # models.py
 
+from ast import For
 from symbol import parameters
 from ..database import Base
 from datetime import datetime
@@ -19,7 +20,7 @@ class Algorithm(Base):
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
-    training_details = relationship("TrainingDetail", back_populates="algorithm")
+    algorithm_details = relationship("AlgorithmDetail", back_populates="algorithm")
     # Relation with parents Has one
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
@@ -30,8 +31,8 @@ class AlgorithmDetail(Base):
     __tablename__ = "algorithm_detail"
     #normal columns
     id = Column(Integer, primary_key=True)
-    training_detail_id = Column(Integer)
-    algorithm_id = Column(Integer)
+    training_detail_id = Column(Integer, ForeignKey("training_detail.id"))
+    algorithm_id = Column(Integer, ForeignKey("algorithm.id"))
     name = Column(String(200))
     parameters = Column(String(3000))
     active = Column(Boolean, default=True)
@@ -205,6 +206,7 @@ class Rule(Base):
     first_indicator_id = Column(Integer, ForeignKey("indicator.id"))
     second_indicator_id = Column(Integer, ForeignKey("indicator.id"))
     condition_id = Column(Integer, ForeignKey("condition.id"))
+    value = Column(Float)
     # Relation with childrens Has many
 
     # Relation with parents Has one
@@ -241,6 +243,7 @@ class Strategy(Base):
     name = Column(String(200))
     description = Column(String(1000))
     strategy_parameters = Column(String(3000))
+    json_parameters = Column(String(3000))
     buy_strategy_id = Column(Integer, ForeignKey("buy_strategy.id"))
     user_id = Column(Integer, ForeignKey("user.id"))
     active = Column(Boolean, default=True)
@@ -333,6 +336,7 @@ class TradingSetup(Base):
 
     # Relation with childrens Has many
     trades = relationship("Trade", back_populates="trading_setup")
+    training_settings = relationship("TrainSetup", back_populates="trading_setup")
     # Relation with parents Has one
     user = relationship("User", back_populates="trading_settings")
 
@@ -358,6 +362,20 @@ class Train(Base):
 
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
+class TrainIndicator(Base):
+    __tablename__ = "train_indicator"
+    #normal columns
+    id = Column(Integer, primary_key=True)
+    train_setup_id = Column(Integer, ForeignKey("train_setup.id"))
+    indicator_id = Column(Integer, ForeignKey("indicator.id"))
+    # Relation with childrens Has many
+
+    # Relation with parents Has one
+    train_setup = relationship("TrainSetup", back_populates="train_indicators")
+    indicator = relationship("Indicator", foreign_keys='TrainIndicator.indicator_id')
+
+    created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
+    updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
 class TrainingDetail(Base):
 
@@ -366,17 +384,18 @@ class TrainingDetail(Base):
     id = Column(Integer, primary_key=True)
     name = Column(String(200))
     description = Column(String(1000))
+    data_split = Column(Float(precision=2))
     user_id = Column(Integer, ForeignKey("user.id"))
     #scaler = Column(String(200))
     #model = Column(String(200))
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
-    train_settings = relationship("TrainSetup", back_populates="training_detail")
+    training_settings = relationship("TrainSetup", back_populates="training_detail")
     algorithm_details = relationship("AlgorithmDetail", back_populates="training_detail")
     training_metrics = relationship("TrainingMetric", back_populates="training_detail")
     # Relation with parents Has one
-    user = relationship("User", back_populates="strategies")
+    user = relationship("User", back_populates="training_details")
 
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
@@ -407,10 +426,10 @@ class TrainSetup(Base):
     description = Column(String(1000))
     active = Column(Boolean, default=True)
     timeframe = Column(String(10))
-    train_data_start = Column(Date)
-    train_data_end = Column(Date)
-    backtest_data_start = Column(Date)
-    backtest_data_end = Column(Date)
+    train_data_start = Column(String(12))
+    train_data_end = Column(String(12))
+    backtest_data_start = Column(String(12))
+    backtest_data_end = Column(String(12))
 
     user_id = Column(Integer, ForeignKey("user.id"))
     trading_setup_id = Column(Integer, ForeignKey("trading_setup.id"))
@@ -419,6 +438,7 @@ class TrainSetup(Base):
 
     # Relation with childrens Has many
     trainings = relationship("Train", back_populates="train_setup")
+    train_indicators = relationship("TrainIndicator", back_populates="train_setup")
     # Relation with parents Has one
     user = relationship("User", back_populates="training_settings")
     trading_setup = relationship("TradingSetup", back_populates="training_settings")

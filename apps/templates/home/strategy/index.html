@@ -26,9 +26,7 @@
             </div>
         </div><!-- /.container-fluid -->
     </section>
-    {% set header = ["name","apellidos", "edad"] %}
-    {% set data = [{"name": "Javier Alex", "apellidos": "jimenez mendoza", "edad":28},{"name": "Javier Alex",
-    "apellidos": "jimenez mendoza", "edad":28}, {"name": "Javier Alex", "apellidos": "jimenez mendoza", "edad":28}] %}
+    {% set header = ["Name","Description", "Active", "Options"] %}
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
@@ -37,12 +35,16 @@
                     {{ button("Nuevo", "btn_nuevo",uri="/strategy/new") }}
                 </div>
             </div>
-            {% call(row,head) x_table.simple_table(header, data, "Tabla de estudiantes" , "basic-datatable") %}
-            <tr>
+            {% call(row,head,index) x_table.simple_table(header, strategies, "Strategies" , "table_strategies") %}
+            <tr data-index="{{index}}">
                 {% for item in head %}
-                <td>
-                    {{ row[item] }}
-                </td>
+                    <td>
+                        {% if item|lower != "options" %}
+                            {{ row[item|lower] }}
+                        {% else %}
+                            <a href="/strategy/edit/{{row.id}}" class="btn btn-sm btn-secondary"><i class="fa fas fa-edit"></i></a>
+                        {% endif %}
+                    </td>
                 {% endfor %}
             </tr>
             {% endcall %}

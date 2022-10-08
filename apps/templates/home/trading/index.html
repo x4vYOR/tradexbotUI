@@ -21,28 +21,28 @@
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
-                    <h1>Trainer creator</h1>
+                    <h1>Trading setup creator</h1>
                 </div>
             </div>
         </div><!-- /.container-fluid -->
     </section>
-    {% set header = ["Name","Description", "Active", "Options"] %}
+    {% set header = ["Name","Description", "Exchange", "Capital", "Active", "Options"] %}
     <!-- Main content -->
     <section class="content">
         <div class="container-fluid">
             <div class="row justify-content-end mb-4">
                 <div class="col-auto">
-                    {{ button("New", "btn_nuevo",uri="/trainer/new") }}
+                    {{ button("New", "btn_nuevo",uri="/trading/new") }}
                 </div>
             </div>
-            {% call(row,head,index) x_table.simple_table(header, training_details, "Trainers" , "table_trainers") %}
+            {% call(row,head,index) x_table.simple_table(header, trading_settings, "Trading Settings" , "table_trading") %}
             <tr data-index="{{index}}">
                 {% for item in head %}
                     <td>
                         {% if item|lower != "options" %}
                             {{ row[item|lower] }}
                         {% else %}
-                            <a href="/trainer/edit/{{row.id}}" class="btn btn-sm btn-secondary"><i class="fa fas fa-edit"></i></a>
+                            <a href="/trading/edit/{{row.id}}" class="btn btn-sm btn-secondary"><i class="fa fas fa-edit"></i></a>
                         {% endif %}
                     </td>
                 {% endfor %}

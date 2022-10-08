@@ -46,8 +46,24 @@ def insertPortfolioMetrics():
 def buyStrategies():
     data = [{"name": "DCA", "parameters": '{ "profit": 0.015 }', "description": "Dolar Cost Average. Periodic buys with same amount. Accumulative strategy"},
             {"name": "Incremental DCA", "parameters": '{ "profit": 0.015 }', "description": "Dolar Cost Average. Periodic buys with incremental amounts. Accumulative strategy"},
-            {"name": "Incremental Buys", "parameters": '{ "profit": 0.015 }', "description": "Purchase with incremental amounts in every buy signal until reach a fixed profit for all stacked quantity. SemiAccumulative"},
-            {"name": "Scalping", "parameters": '{ "profit": 0.015 }', "description": "Buy with a fixed amount. When profit or stoploss is reached sell inmediatly"},
+            {"name": "Incremental Buys", 
+                "parameters": """{ 
+                    "target": {
+                        "profit": 0.015,"risk": 0.015,"risk_candles": 16,"profit_candles": 8
+                    }, 
+                    "filter": {
+                        "drop_rsi_above": 30
+                    },
+                    "backtest": {
+                        "max_buys": 10,
+                        "initial_divisor": 14,
+                        "distance": 8,
+                        "loss": 0
+                    }  
+                }""", 
+                "description": "Purchase with incremental amounts in every buy signal until reach a fixed profit for all stacked quantity. SemiAccumulative"
+            },
+            {"name": "Scalping", "parameters": '{ "profit":0.015  }', "description": "Buy with a fixed amount. When profit or stoploss is reached sell inmediatly"},
             {"name": "Normal Trading", "parameters": '{ "profit": 0.015 }', "description": "Trade with a fixed amount based on buy and sell indicators signal. Can set stoploss"}
             ]
     buyStrategies = [models.BuyStrategy(
@@ -132,9 +148,9 @@ def insertIndicators():
     db.commit()
 
 def insertAlgorithm():
-    data = [{"name": "RandomForest","parameters":'{"n_stimators": [800,1000], "min_samples_split": [4],"cv": [5],"random_state": [0]}',"type":"ML"},
-            {"name": "XGBoost","parameters":'{"learning_rate": [0.1],"objective": ["binary:logistic"],"cv": 5,"n_estimators": [1000,1200],"random_state": [0]}',"type":"ML"},
-            {"name": "SVM","parameters":'{"kernel": ["rbf","linear"],"cv": 5,"random_state": [0]}',"type":"ML"},
+    data = [{"name": "RandomForest","parameters":'{"n_stimators": [800,1000], "min_samples_split": [4],"cv": 5,"random_state": 0}',"type":"ML"},
+            {"name": "XGBoost","parameters":'{"learning_rate": [0.1],"objective": ["binary:logistic"],"cv": 5,"n_estimators": [1000,1200],"random_state": 0}',"type":"ML"},
+            {"name": "SVM","parameters":'{"kernel": ["rbf","linear"],"cv": 5,"random_state": 0}',"type":"ML"},
             {"name": "KNN","parameters":'{"metric": ["euclidean","minkowski"],"cv": 5,"n_neighbors": [5,7]}',"type":"ML"}]
     condition = [models.Algorithm(
         name = item["name"],
