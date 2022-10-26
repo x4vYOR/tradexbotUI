@@ -207,7 +207,10 @@
             let id = $(this).val();
             let strategy_id = $('#strategy_id').val();
             if(id){
-                let html = "";
+                let html = `<div class="alert alert-info">
+                    <h5><i class="icon fas fa-info"></i> Important!</h5>            
+                    <p>Only variables that have square brackets (ie. ['val1','val2']) can have multiple values of the same type separated by commas. These multiple values will be used to generate new individual configurations for prepare data and backtesting.</p>
+                </div>`;
                 $.get( `/strategy/${strategy_id}/parameters/${id}`, function( data ) {
                     console.log(data)
                     html+=strategy_params_to_inputs(data.parameters.backtest,"Backtest params");

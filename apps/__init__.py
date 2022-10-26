@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 
 from apps.authentication import routes as auth_routes
 from apps.home import routes as home_routes
+from apps.train import routes as train_routes
 
 from .database import Base, engine
 
@@ -16,6 +17,7 @@ def create_app():
     app = FastAPI()
 
     mount_static(app)
+    mount_data(app)
     custom_error_pages(app)
     register_routes(app)
     configure_database(app)
@@ -28,6 +30,13 @@ def mount_static(app):
         "/static",
         StaticFiles(directory="apps/static"),
         name="static",
+    )
+
+def mount_data(app):
+    app.mount(
+        "/data",
+        StaticFiles(directory="data"),
+        name="data",
     )
 
 
@@ -55,6 +64,7 @@ def custom_error_pages(app):
 def register_routes(app):
     app.include_router(auth_routes.router)
     app.include_router(home_routes.router)
+    app.include_router(train_routes.router)
 
 
 def configure_database(app):

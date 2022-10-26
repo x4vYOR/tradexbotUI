@@ -52,10 +52,9 @@
                 {% set card_body_algorithms %}
                     <div class="row">
                         <div class="alert alert-info">
-                            <h5><i class="icon fas fa-info"></i> Important!</h5>
-          
+                            <h5><i class="icon fas fa-info"></i> Important!</h5>          
                             <p>Only variables that have square brackets (ie. ['val1','val2']) can have multiple values of the same type separated by commas. These multiple values will be used to generate new individual configurations for training with the GridSearchCV technique.</p>
-                          </div>
+                        </div>
                         <div class="col-12">
                             {% for item in algorithms %}
                                 {{checkbox_inputs(item.name,"algorithms[]",item.id,item.name,item.parameters)}}

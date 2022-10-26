@@ -1,18 +1,16 @@
-# -*- encoding: utf-8 -*-
-
-# home/routes.py
-
-from ..authentication.models import AlgorithmDetail, PortfolioMetric, Strategy, TrainIndicator,TrainSetup, TradingSetup, TrainingDetail, TrainingMetric, User, Indicator, Condition, Pair, BuyStrategy, ModelMetric, Algorithm, StrategyPair,StrategyMetric, Rule
+from ..authentication.models import AlgorithmDetail, PortfolioMetric, Strategy, TrainIndicator,TrainSetup, Train, TradingSetup, TrainingDetail, TrainingMetric, User, Indicator, Condition, Pair, BuyStrategy, ModelMetric, Algorithm, StrategyPair, StrategyMetric, Rule
 from ..authentication.crud import get_current_user
-
+from itertools import combinations, product
 from fastapi import APIRouter, Depends
 from fastapi.templating import Jinja2Templates
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.requests import Request
 from ..database import get_db
 from sqlalchemy.orm import Session
 import ast
 from .helpers import tuples_to_dict
+import hashlib as hash
 router = APIRouter()
 
 templates = Jinja2Templates(directory="apps/templates")
@@ -25,6 +23,7 @@ async def index(request: Request, user: User = Depends(get_current_user)):
         "home/index.html",
         {"request": request, "current_user": user, "segment": "index"},
     )
+
 
 ############# AutoTrain ################
 
@@ -148,6 +147,27 @@ async def update_autotrain(request: Request, user: User = Depends(get_current_us
     db.commit()
 
     return RedirectResponse("/autotrain",status_code=303)
+
+@router.get("/train/params/{id}/{checksum}",response_class=JSONResponse)
+async def get_train_params(id: int,checksum: str, db: Session = Depends(get_db)):
+    train = db.query(Train).filter(Train.id==id, Train.checksum==checksum).first()
+    return JSONResponse(content={"code": str({"backtest":train.backtest_parameters,"filter":train.filter_parameters,"target":train.target_parameters})},status_code=200)
+
+@router.get("/train/config/{id}/{checksum}",response_class=JSONResponse)
+async def get_train_params(id: int,checksum: str, db: Session = Depends(get_db)):
+    train = db.query(Train).filter(Train.id==id, Train.checksum==checksum).first()
+    return JSONResponse(content={"config": str(train.parameters)},status_code=200)
+
+@router.post("/train/configs",response_class=JSONResponse)
+async def get_trains_params(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    form_data = await request.form()
+    configs=[]
+    config_items = tuples_to_dict(form_data.multi_items())
+    for item in ast.literal_eval(config_items["items"]):
+        print(item)
+        aux = db.query(Train).filter(Train.id==int(item["id"]), Train.checksum==item["checksum"]).first()
+        configs.append({"id":aux.id,"parameter":aux.parameters})
+    return JSONResponse(content={"configs": str(configs)},status_code=200)
 
 ############# Settings ################
 
@@ -632,7 +652,116 @@ async def update_trading(
 
     return RedirectResponse("/settings",status_code=303)
 
+################ RUN AutoTrain #######################
 
+@router.post("/autotrain/generate", response_class=JSONResponse)
+async def run_autotrain(request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    form_data = await request.form()
+    form_data = tuples_to_dict(form_data.multi_items())
+    #print(form_data)
+    train_setup = db.query(TrainSetup).filter(TrainSetup.id == form_data["autotrain_id"]).first()
+    #print(train_setup.name)
+    #conf = jsonable_encoder(train_setup.to_dict()) # get json configurations
+    strategy = ast.literal_eval(jsonable_encoder(train_setup.to_dict())["strategy"]["strategy_parameters"]) # extract strategy_parameters {backtest, filter, target}
+    configs = [] # List of independent configs
+    is_array = [] # List of values of Every param with array type values [[val1,val2],[val1,val2],[val1,val2],...]
+    keys = [] #List of keys that has array type values
+    for key, value in strategy["backtest"].items():
+        #iterate over backtest params searching what has array type values
+        value = ast.literal_eval(value)
+        print(key,":",type(value),value)
+        if(type(value) == list):
+            is_array.append(value)
+            keys.append(key)
+    #print("###############")
+    for key, value in strategy["filter"].items():
+        #iterate over filter params searching what has array type values. Then save array value and key respectively. 
+        value = ast.literal_eval(value)
+        print(key,":",type(value),value)
+        if(type(value) == list):
+            is_array.append(value)
+            keys.append(key)
+    #print("## searching what has array ##")
+    for key, value in strategy["target"].items():
+        #iterate over target params searching what has array type values. Then save array value and key respectively.
+        value = ast.literal_eval(value)
+        print(key,":",type(value),value)
+        if(type(value) == list):
+            is_array.append(value)
+            keys.append(key)
+    # Then, we need ensemble an tuple with the respectively value for every key, So we can pickle up one element of every array in "is_array" list.
+    # This is done using combination funct of itertools
+    
+    backtest_combination = [item for cmb in combinations(is_array, len(keys)) for item in product(*cmb)]
+    #print("## IS_ARRAY : ",is_array)
+    #print("## KEYS : ",keys)
+    #print("#####################")
+    #print(backtest_combination)
+    #print("### single configuration ###")
+    
+    checksums = [item.checksum for item in train_setup.trainings]
+    #print(checksums)
+    for item in backtest_combination:
+        #print(" ### BACKTEST COMBINATION  ITEM")
+        #print(item)
+        # For every combination we're gonna make a single configuration json
+        index = 0
+        aux_conf = jsonable_encoder(train_setup.to_dict())
+        aux_strategy = ast.literal_eval(aux_conf["strategy"]["strategy_parameters"])
+        for param in keys:
+            #print(" ### KEY  ITEM")
+            #print(param)
+            #print(index)
+            # detect if key in "keys" List belongs to an setup and then set the single value for this param key
+            if 'backtest' in param:
+                #print("#backtest # ",item[index])
+                #print(aux_strategy["backtest"][param])
+                aux_strategy["backtest"][param] = item[index]
+                #print(aux_strategy["backtest"][param])
+                index+=1
+            elif 'target' in param:
+                #print("#target # ",item[index])
+                aux_strategy["target"][param] = item[index]
+                index+=1
+            elif 'filter' in param:
+                #print("#filter # ",item[index])
+                aux_strategy["filter"][param] = item[index]
+                index+=1
+        #check if aux_strategy checksum exist in db
+        checksum = hash.md5(str(aux_strategy).encode('utf-8')).hexdigest()
+        #print(checksum)
+        if not checksum in checksums:
+            #print("#checksum not in #")
+            #save ensembled strategy_parameters in aux_config
+            #print(" #### PREV STRATEGY PARAMETERS")
+            #print(aux_conf["strategy"]["strategy_parameters"])
+            aux_conf["strategy"]["strategy_parameters"] = aux_strategy
+            #print(" #### NEW STRATEGY PARAMETERS")
+            #print(aux_strategy)
+            #print(" #### NEXT STRATEGY PARAMETERS")
+            #print(aux_conf["strategy"]["strategy_parameters"])
+            #save the ensembled config json in an array
+            configs.append({"checksum":checksum, "conf":aux_conf, "backtest":aux_conf["strategy"]["strategy_parameters"]["backtest"], "filter":aux_conf["strategy"]["strategy_parameters"]["filter"], "target":aux_conf["strategy"]["strategy_parameters"]["target"]})
+            
+    #print("### save trains ###")
+    # save trains
+    #print(configs) # desde antes es el problema
+    for item in configs:
+        #print(item["target"])
+        train = Train(
+            train_setup_id = train_setup.id, 
+            parameters = str(item["conf"]),
+            checksum = item["checksum"],
+            backtest_parameters = str(item["backtest"]),
+            filter_parameters = str(item["filter"]),
+            target_parameters = str(item["target"])
+        )
+        db.add(train)
+        db.commit()
+
+    #print("### set response ###")
+    res = [{"id":item.id, "checksum":item.checksum, "backtest": item.backtest_parameters, "filter": item.filter_parameters, "target": item.target_parameters} for item in train_setup.trainings]
+    return JSONResponse(content=res,status_code=200)
 
 # ##################### EXTRA ###########################
 @router.get("/{template}", response_class=HTMLResponse)

@@ -2,15 +2,15 @@
 
 # models.py
 
-from ast import For
-from symbol import parameters
 from ..database import Base
 from datetime import datetime
 from sqlalchemy.orm import relationship
-from sqlalchemy import Column, Integer, String, DateTime, FetchedValue, Boolean, ForeignKey, Float, Date
+from sqlalchemy import Column, Integer, String, DateTime, FetchedValue, Boolean, ForeignKey, Float
+from sqlalchemy_serializer import SerializerMixin
+from fastapi_utils.guid_type import GUID, GUID_DEFAULT_SQLITE
 
-class Algorithm(Base):
-
+class Algorithm(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "algorithm"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -26,8 +26,28 @@ class Algorithm(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class AlgorithmDetail(Base):
+class Bot(Base, SerializerMixin):
+    serialize_only={'name','uuid','train_model'}
+    __tablename__ = "bot"
+    #normal columns
+    id = Column(Integer, primary_key=True)
+    name = Column(String(200))
+    train_model_id = Column(Integer, ForeignKey("train_model.id"))
+    uuid = Column(GUID, default=GUID_DEFAULT_SQLITE)
+    status = Column(String(50)) # running, stopped
 
+    active = Column(Boolean, default=True)
+
+    # Relation with childrens Has many
+
+    # Relation with parents Has one
+    train_model = relationship("TrainModel", back_populates="bots")
+
+    created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
+    updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
+
+class AlgorithmDetail(Base, SerializerMixin):
+    serialize_only={'parameters','algorithm.name'}
     __tablename__ = "algorithm_detail"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -44,14 +64,14 @@ class AlgorithmDetail(Base):
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
-class Backtest(Base):
+class Backtest(Base, SerializerMixin):
 
     __tablename__ = "backtest"
     #normal columns
     id = Column(Integer, primary_key=True)
     #strategy_id = Column(Integer, ForeignKey("strategy.id"))
-    train_id = Column(Integer, ForeignKey("train.id"))
-
+    train_model_id = Column(Integer, ForeignKey("train_model.id"))
+    pair = Column(String(10))
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
@@ -60,12 +80,12 @@ class Backtest(Base):
     # Relation with parents Has one
     #training_detail = relationship("TrainingDetail", back_populates="backtests")
     #strategy = relationship("Strategy", back_populates="backtests")
-    train = relationship("Train", back_populates="backtests")
+    train_model = relationship("TrainModel", back_populates="backtests")
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class BacktestChart(Base):
+class BacktestChart(Base, SerializerMixin):
 
     __tablename__ = "backtest_chart"
     #normal columns
@@ -83,7 +103,7 @@ class BacktestChart(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class BacktestMetric(Base):
+class BacktestMetric(Base, SerializerMixin):
     __tablename__ = "backtest_metric"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -100,8 +120,8 @@ class BacktestMetric(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class BuyStrategy(Base):
-
+class BuyStrategy(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "buy_strategy"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -117,7 +137,7 @@ class BuyStrategy(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Condition(Base):
+class Condition(Base, SerializerMixin):
     __tablename__ = "condition"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -134,8 +154,8 @@ class Condition(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Indicator(Base):
-
+class Indicator(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "indicator"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -145,13 +165,14 @@ class Indicator(Base):
     active = Column(Boolean, default=True)
     
     # Relation with childrens Has many
+    train_indicators = relationship("TrainIndicator", back_populates="indicator")
     # Relation with parents Has one
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class ModelMetric(Base):
-
+class ModelMetric(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "model_metric"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -160,13 +181,14 @@ class ModelMetric(Base):
 
     # Relation with childrens Has many
     training_metrics = relationship("TrainingMetric", back_populates="model_metric")
+    train_metrics = relationship("TrainMetric", back_populates="model_metric")
     # Relation with parents Has one
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class PortfolioMetric(Base):
-
+class PortfolioMetric(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "portfolio_metric"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -181,8 +203,8 @@ class PortfolioMetric(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Pair(Base):
-
+class Pair(Base, SerializerMixin):
+    serialize_only={'name'}
     __tablename__ = "pair"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -197,7 +219,8 @@ class Pair(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Rule(Base):
+class Rule(Base, SerializerMixin):
+    serialize_only={'order_type','first_indicator.name','second_indicator.name','condition.name','value'}
     __tablename__ = "rule"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -219,7 +242,7 @@ class Rule(Base):
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
 """
-class SellStrategy(Base):
+class SellStrategy(Base, SerializerMixin):
 
     __tablename__ = "sell_strategy"
     #normal columns
@@ -235,8 +258,8 @@ class SellStrategy(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 """
-class Strategy(Base):
-
+class Strategy(Base, SerializerMixin):
+    serialize_only={'strategy_parameters','buy_strategy.name','rules','strategy_pairs','strategy_metrics'}
     __tablename__ = "strategy"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -261,7 +284,8 @@ class Strategy(Base):
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class StrategyMetric(Base):
+class StrategyMetric(Base, SerializerMixin):
+    serialize_only={'portfolio_metric.name'}
     __tablename__ = "strategy_metric"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -278,7 +302,8 @@ class StrategyMetric(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class StrategyPair(Base):
+class StrategyPair(Base, SerializerMixin):
+    serialize_only={'pair.name'}
     __tablename__ = "strategy_pair"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -293,7 +318,7 @@ class StrategyPair(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Trade(Base):
+class Trade(Base, SerializerMixin):
     __tablename__ = "trade"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -316,7 +341,8 @@ class Trade(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class TradingSetup(Base):
+class TradingSetup(Base, SerializerMixin):
+    serialize_only = ('id', 'exchange','exchange_comission', 'capital', 'currency_base', 'api_key','api_secret')
 
     __tablename__ = "trading_setup"
     #normal columns
@@ -343,26 +369,57 @@ class TradingSetup(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class Train(Base):
+class Train(Base, SerializerMixin):
 
     __tablename__ = "train"
     #normal columns
     id = Column(Integer, primary_key=True)
     train_setup_id = Column(Integer, ForeignKey("train_setup.id"))
-    scaler = Column(String(200))
-    model = Column(String(200))
-    algorithm_parameters = Column(String(3000))    
-    strategy_parameters = Column(String(3000))    
+    status = Column(String(100))
+    completed = Column(Boolean,default=False)
+    backtest_parameters = Column(String(2000))
+    filter_parameters = Column(String(2000))
+    target_parameters = Column(String(2000))
+    checksum = Column(String(100))
+    parameters = Column(String(8000))
     active = Column(Boolean, default=True)
 
     # Relation with childrens Has many
-    backtests = relationship("Backtest", back_populates="train")
+    #backtests = relationship("Backtest", back_populates="train")
+    train_models = relationship("TrainModel", back_populates="train")
     # Relation with parents Has one
     train_setup = relationship("TrainSetup", back_populates="trainings")
 
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
-class TrainIndicator(Base):
+class TrainModel(Base, SerializerMixin):
+
+    __tablename__ = "train_model"
+    #normal columns
+    id = Column(Integer, primary_key=True)
+    train_id = Column(Integer, ForeignKey("train.id"))
+    model = Column(String(200))
+    scaler = Column(String(200))
+    model_best_parameters = Column(String(2000))
+    active = Column(Boolean, default=True)
+    favorite = Column(Boolean, default=False)
+
+    # Relation with childrens Has many
+    backtests = relationship("Backtest", back_populates="train_model")
+    bots = relationship("Bot", back_populates="train_model")
+    train_metrics = relationship("TrainMetric", back_populates="train_model")
+    # Relation with parents Has one
+    train = relationship("Train", back_populates="train_models")
+
+    created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
+    updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
+    
+    def get_metrics_value(self):
+        ret = [item.value for item in self.train_metrics]
+        return ret
+class TrainIndicator(Base, SerializerMixin):
+    serialize_only = {'indicator.name'}
+    
     __tablename__ = "train_indicator"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -372,13 +429,13 @@ class TrainIndicator(Base):
 
     # Relation with parents Has one
     train_setup = relationship("TrainSetup", back_populates="train_indicators")
-    indicator = relationship("Indicator", foreign_keys='TrainIndicator.indicator_id')
+    indicator = relationship("Indicator", back_populates="train_indicators")
 
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class TrainingDetail(Base):
-
+class TrainingDetail(Base, SerializerMixin):
+    serialize_only={'data_split','algorithm_details','training_metrics'}
     __tablename__ = "training_detail"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -400,7 +457,25 @@ class TrainingDetail(Base):
     created_at = Column(DateTime, default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime, onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class TrainingMetric(Base):
+class TrainMetric(Base, SerializerMixin):
+    __tablename__ = "train_metric"
+    #normal columns
+    id = Column(Integer, primary_key=True)
+    value = Column(Float)
+    description = Column(String(200))
+    train_model_id = Column(Integer, ForeignKey("train_model.id"))
+    model_metric_id = Column(Integer, ForeignKey("model_metric.id"))
+    # Relation with childrens Has many
+
+    # Relation with parents Has one
+    train_model = relationship("TrainModel", back_populates="train_metrics")
+    model_metric = relationship("ModelMetric", back_populates="train_metrics")
+
+    created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
+    updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
+
+class TrainingMetric(Base, SerializerMixin):
+    serialize_only={'model_metric.name'}
     __tablename__ = "training_metric"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -417,8 +492,8 @@ class TrainingMetric(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class TrainSetup(Base):
-
+class TrainSetup(Base, SerializerMixin):
+    serialize_only = ('id','timeframe', 'train_data_start', 'train_data_end', 'backtest_data_start', 'backtest_data_end','train_indicators','training_detail','strategy','trading_setup')
     __tablename__ = "train_setup"
     #normal columns
     id = Column(Integer, primary_key=True)
@@ -448,13 +523,14 @@ class TrainSetup(Base):
     created_at = Column(DateTime(), default=datetime.now(), server_default=FetchedValue())
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
-class User(Base):
+class User(Base, SerializerMixin):
 
     __tablename__ = "user"
 
     id = Column(Integer, primary_key=True)
     username = Column(String(64), unique=True)
     email = Column(String(128), unique=True)
+    uuid = Column(GUID, default=GUID_DEFAULT_SQLITE)
     password = Column(String(64))
     strategies = relationship("Strategy", back_populates="user")
     training_details = relationship("TrainingDetail", back_populates="user")

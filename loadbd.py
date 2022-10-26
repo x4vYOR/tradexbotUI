@@ -34,7 +34,9 @@ def insertPortfolioMetrics():
             {"name": "% Profit"},
             {"name": "Losses"},
             {"name": "Wins"},
-            {"name": "Trade Duration"}
+            {"name": "Trade Duration"},
+            {"name": "N Buys"},
+            {"name": "N BuysAcum"}
             ]
     metrics = [models.PortfolioMetric(
         name = item["name"]
@@ -49,16 +51,16 @@ def buyStrategies():
             {"name": "Incremental Buys", 
                 "parameters": """{ 
                     "target": {
-                        "profit": 0.015,"risk": 0.015,"risk_candles": 16,"profit_candles": 8
+                        "profit": [0.015,0.01],"risk": [0.015,0.01],"risk_candles": [16,8],"profit_candles": [8,6]
                     }, 
                     "filter": {
-                        "drop_rsi_above": 30
+                        "drop_rsi_above": [30,28]
                     },
                     "backtest": {
-                        "max_buys": 10,
-                        "initial_divisor": 14,
-                        "distance": 8,
-                        "loss": 0
+                        "initial_max": [[10,14],[15,20]],
+                        "distance": [8,12],
+                        "loss": [0],    
+                        "max_capital_per_pair": 0.1
                     }  
                 }""", 
                 "description": "Purchase with incremental amounts in every buy signal until reach a fixed profit for all stacked quantity. SemiAccumulative"
@@ -148,10 +150,10 @@ def insertIndicators():
     db.commit()
 
 def insertAlgorithm():
-    data = [{"name": "RandomForest","parameters":'{"n_stimators": [800,1000], "min_samples_split": [4],"cv": 5,"random_state": 0}',"type":"ML"},
-            {"name": "XGBoost","parameters":'{"learning_rate": [0.1],"objective": ["binary:logistic"],"cv": 5,"n_estimators": [1000,1200],"random_state": 0}',"type":"ML"},
-            {"name": "SVM","parameters":'{"kernel": ["rbf","linear"],"cv": 5,"random_state": 0}',"type":"ML"},
-            {"name": "KNN","parameters":'{"metric": ["euclidean","minkowski"],"cv": 5,"n_neighbors": [5,7]}',"type":"ML"}]
+    data = [{"name": "RandomForest","parameters":"{'n_stimators': [800,1000], 'min_samples_split': [4],'cv': 5,'random_state': 0}","type":"ML"},
+            {"name": "XGBoost","parameters":"{'learning_rate': [0.1],'objective': ['binary:logistic'],'cv': 5,'n_estimators': [1000,1200],'random_state': 0}","type":"ML"},
+            {"name": "SVM","parameters":"{'kernel': ['rbf','linear'],'cv': 5,'random_state': 0}","type":"ML"},
+            {"name": "KNN","parameters":"{'metric': ['euclidean','minkowski'],'cv': 5,'n_neighbors': [5,7]}","type":"ML"}]
     condition = [models.Algorithm(
         name = item["name"],
         parameters = item["parameters"],
