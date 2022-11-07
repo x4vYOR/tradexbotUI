@@ -27,10 +27,9 @@ class PrepareData:
     train_columns = ["volume"]
     train_dataset = pd.DataFrame()
     backtest_dataset = []
-    host = "http://35.188.143.189"
     headers = {}
 
-    def __init__(self, configuration):
+    def __init__(self, configuration, api):
         print(configuration["train_indicators"])
         print(configuration["strategy"]["rules"])
         for item in extract_indicators(configuration["train_indicators"],configuration["strategy"]["rules"]):
@@ -41,15 +40,10 @@ class PrepareData:
         self.end = configuration["backtest_data_end"]
         self.split = configuration["backtest_data_start"]
         self.timeframe = configuration["timeframe"]
-        self.connect()
+        self.api = api
         self.loadDataset()
+        
     
-    def connect(self):
-        res = requests.post(self.host+'/api/login',json={"username": "x4vyjm", "email": "x4vyjm@gmail.com"})
-        token = res.text.replace('"','')
-        self.headers = {"Authorization":"Bearer "+token}
-        print("######## SUCCESSFUL CONECTION ##########")
-
     def loadDataset(self):
         for pair in self.pairs:
             data = {
@@ -60,8 +54,8 @@ class PrepareData:
                 "indicators": self.x_columns
             }
             print(data)
-            print(self.host+'/api/data')
-            r = requests.post(self.host+'/api/data', json=data, headers=self.headers)
+            print(self.api["host"]+'/api/data')
+            r = requests.post(self.api["host"]+'/api/data', json=data, headers=self.api["headers"])
             #print(r.json())
             #print(r.json()["data"])
             print("$$$$$$$$$$")

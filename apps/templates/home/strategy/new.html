@@ -188,7 +188,7 @@
             inputHTML += `<div class="col-auto">
                             <div class="form-group">
                             <label>${key}</label>
-                            <input type="text" class="form-control ${key.toLowerCase()}" id="${key}" name="${type}_${key}" value="${data[key]}" placeholder="Enter ..." required>
+                            <input type="text" class="form-control ${key.toLowerCase()}" id="${key}" name="${type}_${key}" value="${JSON.stringify(data[key])}" placeholder="Enter ..." required>
                             </div>
                         </div>`;
         })
@@ -206,6 +206,7 @@
                                 <p>Only variables that have square brackets (ie. ['val1','val2']) can have multiple values of the same type separated by commas. These multiple values will be used to generate new individual configurations for prepare data and backtesting.</p>
                             </div>`;
                 $.get( `/buystrategy/get/${id}`, function( data ) {
+                    console.log(data);
                     html+=strategy_params_to_inputs(data.parameters.backtest,"Backtest params","backtest");
                     html+=strategy_params_to_inputs(data.parameters.filter,"Dataset filter params", "filter");
                     html+=strategy_params_to_inputs(data.parameters.target,"Dataset Target params", "target");

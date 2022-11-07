@@ -164,7 +164,7 @@ class Trainer:
         datasetclose["close"] = dataset["close"]
         datasetclose["high"] = dataset["high"]
         datasetclose["result1"] = False
-        for n in range(strategy_parameters["target"]["target_profit_candles"]):
+        for n in range(int(strategy_parameters["target"]["target_profit_candles"])):
             datasetclose["aux"] = datasetclose["high"].shift(-1 * (n + 1))
             datasetclose["result1"] = datasetclose["result1"] | (
                 np.where(
@@ -177,12 +177,12 @@ class Trainer:
 
         # ¿dentro de las "n_riesgo" siguientes velas, si comprara en precio de cierre, perderé "riesgo"% ?
         datasetclose["result2"] = True
-        for n in range(strategy_parameters["target"]["target_risk_candles"]):
+        for n in range(int(strategy_parameters["target"]["target_risk_candles"])):
             datasetclose["aux"] = datasetclose["close"].shift(-1 * (n + 1))
             datasetclose["result2"] = datasetclose["result2"] & (
                 np.where(
                     datasetclose["aux"]
-                    <= datasetclose["close"] * (1 - strategy_parameters["target"]["target_risk"]),
+                    <= datasetclose["close"] * (1 - float(strategy_parameters["target"]["target_risk"])),
                     False,
                     True,
                 )

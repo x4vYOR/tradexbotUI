@@ -27,14 +27,15 @@ class Algorithm(Base, SerializerMixin):
     updated_at = Column(DateTime(), onupdate=datetime.now(), server_default=FetchedValue(), server_onupdate=FetchedValue())
 
 class Bot(Base, SerializerMixin):
-    serialize_only={'name','uuid','train_model'}
+    serialize_only={'name','uuid','train_model','task_id'}
     __tablename__ = "bot"
     #normal columns
     id = Column(Integer, primary_key=True)
     name = Column(String(200))
     train_model_id = Column(Integer, ForeignKey("train_model.id"))
-    uuid = Column(GUID, default=GUID_DEFAULT_SQLITE)
+    uuid = Column(String(50))
     status = Column(String(50)) # running, stopped
+    task_id = Column(String(100))
 
     active = Column(Boolean, default=True)
 
@@ -400,6 +401,7 @@ class TrainModel(Base, SerializerMixin):
     train_id = Column(Integer, ForeignKey("train.id"))
     model = Column(String(200))
     scaler = Column(String(200))
+    columns = Column(String(1000))
     model_best_parameters = Column(String(2000))
     active = Column(Boolean, default=True)
     favorite = Column(Boolean, default=False)

@@ -232,8 +232,8 @@ class Promedio_creciente:
         self.maxima_n_compras = max_compras
         self.divisor_inicial = divisor_inicial
         self.profit = profit
-        self.min_distancia = min_distancia
-        self.distancia = min_distancia
+        self.min_distancia = int(min_distancia)
+        self.distancia = int(min_distancia)
         self.lista_periodos = []
         self.lista_buys = []
         self.lista_sells = []

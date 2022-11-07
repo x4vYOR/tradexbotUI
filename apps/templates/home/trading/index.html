@@ -35,7 +35,7 @@
                     {{ button("New", "btn_nuevo",uri="/trading/new") }}
                 </div>
             </div>
-            {% call(row,head,index) x_table.simple_table(header, trading_settings, "Trading Settings" , "table_trading") %}
+            {% call(row,head,index) x_table.simple_table(header, trading_settings, "Trading Settings" , "table_trading", height="auto") %}
             <tr data-index="{{index}}">
                 {% for item in head %}
                     <td>

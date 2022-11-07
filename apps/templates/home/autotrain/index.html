@@ -41,7 +41,7 @@
             </div>
             <div class="row">
                 <div class="col-md-12">
-                    {% call(row,head,index) x_table.simple_table(header, trainings, "AutoTrain List" , "table_autotrain") %}
+                    {% call(row,head,index) x_table.simple_table(header, trainings, "AutoTrain List" , "table_autotrain", height="auto") %}
                         <tr  data-widget="expandable-table" aria-expanded="false">
                             {% for item in head %}
                                 <td>
@@ -202,6 +202,8 @@
         var formData = new FormData();
         formData.append('autotrain_id',autotrain_id);
         console.log(formData);
+        row_to_add = $(this).closest('tr').next().find('td');
+        console.log(row_to_add);
         $.ajax({
             url: "/autotrain/generate",
             method: "POST",
@@ -210,6 +212,27 @@
             contentType: false,
             success: function(data) {
                 console.log(data);
+                let trHTML = "";
+                trHTML += `<table class=" table table-striped" style="min-width: 100%">
+                    <tbody class="train_{{index}}">`;
+                $.each(data, (i,item)=>{
+                    trHTML+=`<tr data-id="${item.id}" data-checksum="${item.checksum}" class="None" >
+                        <td class="align-middle" style="width: 5%;"><b>${i+1}</b></td>
+                        <td class="align-middle" style="width: 45%;"><b>Checksum: </b>${item.checksum}</td>
+                        <td class="align-middle" style="width: 30%;">
+                            <b>Status: </b>
+                            <span class="badge badge-secondary">Not started</span>
+                        </td>                                
+                        <td class="align-middle" style="width: 20%;">
+                            <span class="btn btn-sm btn-info btn-view-params" title="View params" data-id="${item.id}" data-checksum="${item.checksum}"><i class="fa fas fa-code"></i></span>
+                            <a href="/train/results/${item.id}/${item.checksum}" title="Train results" class="btn btn-sm btn-secondary" disabled ><i class="fa fas fa-chart-line"></i></a>
+                        </td>
+                    </tr>`;                
+                });
+                trHTML += `</tbody>                                    
+                </table>`;
+                row_to_add.empty();
+                row_to_add.append(trHTML);
             }
         });
     });

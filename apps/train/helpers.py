@@ -1,6 +1,8 @@
 
 import requests as req
 import pandas as pd
+import datetime
+
 def tuples_to_dict(data):
     res={}
     for key, value in data:
@@ -18,7 +20,7 @@ def extract_indicators(indicators, rules):
     indicators = [item["indicator"]["name"] for item in indicators]
     return [item for item in list(set(rules_indicator1+rules_indicator2+indicators)) if item != "value"]
 
-async def get_dataset(pairs, timeframe, ini, end, indicators):
+""" async def get_dataset(pairs, timeframe, ini, end, indicators):
         data = {
             "pair": "ETHBTC",
             "timeframe": "5m",
@@ -31,6 +33,24 @@ async def get_dataset(pairs, timeframe, ini, end, indicators):
         headers = {"Authorization":"Bearer "+token}
         type(headers)
         r = requests.post(host+'/api/data', json=data, headers=headers)
-        df = pd.read_json(r.json()["data"])
+        df = pd.read_json(r.json()["data"]) """
 
 
+def unixtodate(value, format='%d/%m/%Y %H:%M'):
+    if(len(value)>0):
+        ts = int(float(value))
+        dt = datetime.datetime.fromtimestamp(ts / 1000)
+        formatted_time = dt.strftime(format)
+        return formatted_time
+    else:
+        return ""
+
+def formatdate(value, format='%d/%m/%Y %H:%M'):
+    print(f"value: {value}")
+    if(len(value)>0):
+        ts = int(value)
+        dt = datetime.datetime.fromtimestamp(ts / 1000)
+        formatted_time = dt.strftime(format)
+        return formatted_time
+    else:
+        return ""

@@ -798,6 +798,7 @@ def get_segment(request):
 @router.get("/buystrategy/get/{id}")
 async def get_buystrategy(id: int, db: Session = Depends(get_db)):
     bs = db.query(BuyStrategy).filter(BuyStrategy.id == id).first()
+    print(ast.literal_eval(bs.parameters))
     return JSONResponse(content={"id":bs.id,"parameters":ast.literal_eval(bs.parameters),"name":bs.name,"description":bs.description},status_code=200)
 
 @router.get("/strategy/{id}/parameters/{buy_strat_id}")

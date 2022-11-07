@@ -33,14 +33,14 @@
     {% set metrics_name = ["F1-score","ROC", "Specificity", "Accuracy", "Recall", "Precision", "TP", "TN", "FP", "FN"] %}
     {% set header = ["Train", "Model"]+metrics_name %}
     {% set resume_content %}
-        {% call(row,head,index) x_table.simple_table(header, trains, "Trainings results" , "table_train_results", class="hover") %}
+        {% call(row,head,index) x_table.simple_table(header, trains, "Trainings results" , "table_train_results", class="hover", height="auto") %}
             <tr>
                 <td rowspan="1">{{index}}</td>
                 {% set name = row.model.split('/')[2].split("_") %}
                 <td>{{name[0]}}</td>
                 {% for trainmetric in row.get_metrics_value() %}
                     <td>
-                        {{trainmetric}}
+                        {{trainmetric|round(3, 'common')}}
                     </td>
                 {% endfor %}
             </tr>
@@ -128,7 +128,6 @@
                                         <div class="small-box bg-info">
                                             <div class="inner">
                                             <h3>${item.value}</h3>
-                            
                                             <p>${item.name}</p>
                                             </div>
                                             <div class="icon">
@@ -153,7 +152,15 @@
                     $(".charts-row .chart-funds").append(`<embed src="${result.chart_funds}" type="text/html" width="100%" height="500px">`);
                     $('#trainmodel_name').html(result.model_name);
                     $('#autobot').attr('data-id',result.id);
-
+                    if(result.has_bot){
+                        $('#autobot').removeClass('btn-outline-warning').addClass('btn-warning');
+                        $('#autobot span').html('Bot created!');
+                        $('#autobot').prop('disabled', true);
+                    }else{
+                        $('#autobot').removeClass('btn-warning').addClass('btn-outline-warning');
+                        $('#autobot span').html('create BOT');
+                        $('#autobot').prop('disabled', false);
+                    }
                 }catch(error){
                     console.error(error)
                 }
@@ -180,9 +187,14 @@
                 contentType: false,
                 success: function(data) {
                     console.log(data);
-                    $('#autobot').removeClass('btn-outline-warning').addClass('btn-warning');
-                    $('#autobot span').html('Bot created!');
-                    $('#autobot').prop('disabled', true);
+                    if(data.success){
+                        toastr.success('Bot was created successfully!');
+                        $('#autobot').removeClass('btn-outline-warning').addClass('btn-warning');
+                        $('#autobot span').html('create BOT');
+                        $('#autobot').prop('disabled', false);
+                    }else{
+                        toastr.error(data.message);
+                    }
                 }
             });
         });
